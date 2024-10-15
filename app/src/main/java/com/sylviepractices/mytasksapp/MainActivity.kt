@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyTasksAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    CreateTaskScreen(modifier = Modifier.padding(innerPadding))
+                    CreateTaskScreen(modifier = Modifier.padding(innerPadding), createTaskViewModel)
                 }
             }
         }
