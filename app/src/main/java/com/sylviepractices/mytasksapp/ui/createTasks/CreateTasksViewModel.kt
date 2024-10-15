@@ -40,4 +40,9 @@ class CreateTasksViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    fun deleteTask(task: TaskModel) {
+        val taskDelete = _tasks.find { it.id == task.id}
+        _tasks.remove(taskDelete)
+    }
+
 }
