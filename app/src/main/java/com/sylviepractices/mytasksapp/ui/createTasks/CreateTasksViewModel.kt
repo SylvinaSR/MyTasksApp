@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sylviepractices.mytasksapp.domain.model.TaskModel
 import com.sylviepractices.mytasksapp.domain.usecases.AddTaskUseCase
+import com.sylviepractices.mytasksapp.domain.usecases.DeleteTaskUseCase
 import com.sylviepractices.mytasksapp.domain.usecases.GetTasksUseCase
 import com.sylviepractices.mytasksapp.domain.usecases.UpdateTaskUseCase
 import com.sylviepractices.mytasksapp.ui.createTasks.CreateTasksUiState.Success
@@ -25,6 +26,7 @@ class CreateTasksViewModel @Inject constructor(
     private val addTaskUseCase: AddTaskUseCase,
     getTasksUseCase: GetTasksUseCase,
     private val updateTaskUseCase: UpdateTaskUseCase,
+    private val deleteTaskUseCase: DeleteTaskUseCase
 ) : ViewModel() {
 
     private val logTAG = CreateTasksViewModel::class.java.simpleName
@@ -61,8 +63,9 @@ class CreateTasksViewModel @Inject constructor(
     }
 
     fun deleteTask(task: TaskModel) {
-//        val taskDelete = _tasks.find { it.id == task.id}
-//        _tasks.remove(taskDelete)
+        viewModelScope.launch {
+            deleteTaskUseCase(task)
+        }
     }
 
 }
