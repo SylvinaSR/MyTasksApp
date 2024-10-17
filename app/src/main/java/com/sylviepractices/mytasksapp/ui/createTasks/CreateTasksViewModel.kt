@@ -1,7 +1,5 @@
 package com.sylviepractices.mytasksapp.ui.createTasks
 
-import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -37,9 +35,6 @@ class CreateTasksViewModel @Inject constructor(
 
     private val _showDialog = MutableLiveData<Boolean>()
     val showDialog: LiveData<Boolean> = _showDialog
-
-//    private val _tasks = mutableStateListOf<TaskModel>()
-//    val tasks: List<TaskModel> = _tasks
 
     fun dialogClose() {
         _showDialog.value = false
