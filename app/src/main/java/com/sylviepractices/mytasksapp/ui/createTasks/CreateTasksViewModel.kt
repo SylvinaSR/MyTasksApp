@@ -5,27 +5,47 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.sylviepractices.mytasksapp.domain.model.TaskModel
+import com.sylviepractices.mytasksapp.domain.usecases.AddTaskUseCase
+import com.sylviepractices.mytasksapp.domain.usecases.GetTasksUseCase
+import com.sylviepractices.mytasksapp.ui.createTasks.CreateTasksUiState.Success
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class CreateTasksViewModel @Inject constructor() : ViewModel() {
+@HiltViewModel
+class CreateTasksViewModel @Inject constructor(
+    private val addTaskUseCase: AddTaskUseCase,
+    getTasksUseCase: GetTasksUseCase,
+) : ViewModel() {
 
     private val logTAG = CreateTasksViewModel::class.java.simpleName
+
+    val uiState: StateFlow<CreateTasksUiState> = getTasksUseCase().map(::Success)
+        .catch { CreateTasksUiState.Error(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CreateTasksUiState.Loading)
 
     private val _showDialog = MutableLiveData<Boolean>()
     val showDialog: LiveData<Boolean> = _showDialog
 
-    private val _tasks = mutableStateListOf<TaskModel>()
-    val tasks: List<TaskModel> = _tasks
+//    private val _tasks = mutableStateListOf<TaskModel>()
+//    val tasks: List<TaskModel> = _tasks
 
     fun dialogClose() {
         _showDialog.value = false
     }
 
     fun onTaskCreated(task: String) {
-        Log.d(logTAG, "My new Task: $task")
-        _tasks.add(TaskModel(task = task))
         _showDialog.value = false
+        viewModelScope.launch {
+            addTaskUseCase(TaskModel(task = task))
+        }
     }
 
     fun onShowDialogClick() {
@@ -33,16 +53,19 @@ class CreateTasksViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onCheckBoxSelected(task: TaskModel) {
-        Log.d(logTAG, "My selectedTask Task: $task")
-        val index = _tasks.indexOf(task)
-        _tasks[index] = _tasks[index].let {
-            it.copy(selected = !it.selected)
-        }
+       //Actualizar check
+
+
+//        Log.d(logTAG, "My selectedTask Task: $task")
+//        val index = _tasks.indexOf(task)
+//        _tasks[index] = _tasks[index].let {
+//            it.copy(selected = !it.selected)
+//        }
     }
 
     fun deleteTask(task: TaskModel) {
-        val taskDelete = _tasks.find { it.id == task.id}
-        _tasks.remove(taskDelete)
+//        val taskDelete = _tasks.find { it.id == task.id}
+//        _tasks.remove(taskDelete)
     }
 
 }

@@ -1,5 +1,6 @@
 package com.sylviepractices.mytasksapp.ui.createTasks
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -19,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -27,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -34,10 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.sylviepractices.mytasksapp.domain.model.TaskModel
 
 @Composable
@@ -45,19 +50,44 @@ fun CreateTaskScreen(modifier: Modifier, viewModel: CreateTasksViewModel) {
 
     val showDialog: Boolean by viewModel.showDialog.observeAsState(initial = false)
 
-    Box(modifier = modifier.fillMaxSize()) {
-        CreateTaskDialog(
-            showDialog,
-            onDismiss = { viewModel.dialogClose() },
-            onTaskAdded = { viewModel.onTaskCreated(it) })
-        FabDialog(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            viewModel = viewModel
-        )
-        TasksList(viewModel = viewModel)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    val uiState by produceState<CreateTasksUiState>(
+        initialValue = CreateTasksUiState.Loading,
+        key1 = lifecycle,
+        key2 = viewModel
+    ) {
+        lifecycle.repeatOnLifecycle(state = Lifecycle.State.STARTED) {
+            viewModel.uiState.collect {
+                value = it
+            }
+        }
     }
+
+    when(uiState){
+        is CreateTasksUiState.Error -> {
+            Log.d("CreateTaskScreen", "Error")
+        }
+        CreateTasksUiState.Loading -> {
+            CircularProgressIndicator()
+        }
+        is CreateTasksUiState.Success -> {
+            Box(modifier = modifier.fillMaxSize()) {
+                CreateTaskDialog(
+                    showDialog,
+                    onDismiss = { viewModel.dialogClose() },
+                    onTaskAdded = { viewModel.onTaskCreated(it) })
+                FabDialog(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp),
+                    viewModel = viewModel
+                )
+                TasksList(myTasks = ((uiState as CreateTasksUiState.Success).tasks), viewModel = viewModel)
+            }
+        }
+    }
+
 }
 
 @Composable
@@ -111,10 +141,7 @@ fun CreateTaskDialog(show: Boolean, onDismiss: () -> Unit, onTaskAdded: (String)
 }
 
 @Composable
-fun TasksList(viewModel: CreateTasksViewModel) {
-
-    val myTasks: List<TaskModel> = viewModel.tasks
-
+fun TasksList(myTasks: List<TaskModel>, viewModel: CreateTasksViewModel) {
     LazyColumn {
         items(myTasks, key = { it.id }) { task ->
             TaskItem(task = task, viewModel = viewModel)
