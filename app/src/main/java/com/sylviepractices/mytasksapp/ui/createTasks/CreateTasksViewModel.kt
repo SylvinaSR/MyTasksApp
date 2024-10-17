@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.sylviepractices.mytasksapp.domain.model.TaskModel
 import com.sylviepractices.mytasksapp.domain.usecases.AddTaskUseCase
 import com.sylviepractices.mytasksapp.domain.usecases.GetTasksUseCase
+import com.sylviepractices.mytasksapp.domain.usecases.UpdateTaskUseCase
 import com.sylviepractices.mytasksapp.ui.createTasks.CreateTasksUiState.Success
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,6 +24,7 @@ import javax.inject.Inject
 class CreateTasksViewModel @Inject constructor(
     private val addTaskUseCase: AddTaskUseCase,
     getTasksUseCase: GetTasksUseCase,
+    private val updateTaskUseCase: UpdateTaskUseCase,
 ) : ViewModel() {
 
     private val logTAG = CreateTasksViewModel::class.java.simpleName
@@ -53,14 +55,9 @@ class CreateTasksViewModel @Inject constructor(
     }
 
     fun onCheckBoxSelected(task: TaskModel) {
-       //Actualizar check
-
-
-//        Log.d(logTAG, "My selectedTask Task: $task")
-//        val index = _tasks.indexOf(task)
-//        _tasks[index] = _tasks[index].let {
-//            it.copy(selected = !it.selected)
-//        }
+        viewModelScope.launch {
+            updateTaskUseCase(task.copy(selected = !task.selected))
+        }
     }
 
     fun deleteTask(task: TaskModel) {
